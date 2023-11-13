@@ -18,24 +18,14 @@ namespace RevitProject
             var doc = uiApp.ActiveUIDocument.Document;
             var activeView = doc.ActiveView;
 
-            //var docLevel = doc.ActiveView.LevelId;
-            //var plane = Plane.CreateByNormalAndOrigin(activeView.ViewDirection, activeView.Origin);
-
             var pickedRef = uiApp.ActiveUIDocument.Selection.PickObject(ObjectType.Subelement, "Выберите стену");
             var userClickPoint = pickedRef.GlobalPoint;
-
             var selectedElement = doc.GetElement(pickedRef);
 
             if (selectedElement is FamilyInstance)
             {
 
                 var familyInstance = selectedElement as FamilyInstance;
-                var size = familyInstance.Parameters.Size;
-
-                var transform = familyInstance.GetTotalTransform();
-                var location = (familyInstance.Location as LocationPoint).Point;
-
-                var rotateAngle = familyInstance.HandOrientation.AngleOnPlaneTo(XYZ.BasisY, XYZ.BasisZ) * (180 / Math.PI);
 
                 var geometry = familyInstance.get_Geometry(new Options());
                 var boundingBox = geometry.GetBoundingBox();
@@ -45,27 +35,33 @@ namespace RevitProject
                 var computeCentroid = solid.ComputeCentroid();
                 var sizes = GetSizeSides(solid);
 
-
-                var widthParameter = double.Parse(familyInstance.LookupParameter("Width_Model").AsValueString()) / 1000;
-                var heightParameter = double.Parse(familyInstance.LookupParameter("Height_Model").AsValueString()) / 1000;
-                var square = widthParameter * heightParameter;
-
                 var pointMin = boundingBox.Min;
                 var pointMax = boundingBox.Max;
 
                 TaskDialog.Show("FamilyInstance", "Selected FamilyInstance\n" +
-                    $"\n{sizes[0]}\n{sizes[1]}\n{sizes[2]}\n{computeCentroid}\n\n{rotateAngle}");
+                    $"\n{sizes[0]}\n{sizes[1]}\n{sizes[2]}\n{computeCentroid}\n");
 
                 //var sketchPlane = SketchPlane.Create(doc, plane);
-                var newLocation = location + new XYZ(heightParameter + 20 + location.X, 0, 0);
 
                 var categories = doc.Settings.Categories;
                 var el = categories.get_Item(BuiltInCategory.OST_Walls);
 
                 //AssemblyInstance.Create(doc, new List<ElementId>() { familyInstance.Id, newInstance.Id }, el.Id);
-              
 
-                CreateNew(doc, pointMin, pointMax, rotateAngle);
+
+                var points = new List<XYZ>() 
+                { 
+                    pointMin, 
+                    new XYZ(pointMax.X, pointMin.X, pointMin.Z),   
+                    new XYZ(pointMax.X, pointMax.Y, pointMin.Z),
+                    new XYZ(pointMin.X, pointMax.Y, pointMin.Z)
+                };
+
+                var shapes = Generate.GetShapes(sizes, points);
+
+
+
+                CreateNew(doc, pointMin, pointMax, shapes);
             }
             else
                 TaskDialog.Show("Null", "Нужно тыкнуть в другое место");
@@ -116,45 +112,55 @@ namespace RevitProject
             return sizes;
         }
 
-        public static void CreateNew(Document doc, XYZ pointMin, XYZ pointMax, double rotateAngle)
+        public static void CreateNew(Document doc, XYZ pointMin, XYZ pointMax, List<Visiting> visitings)
         {
             using (Transaction trans = new Transaction(doc, "Create Box DirectShape"))
             {
                 trans.Start();
 
-                XYZ min = new XYZ(pointMax.X + 20, pointMin.Y, pointMin.Z);
-                XYZ max = min + new XYZ(5 / 0.3048, 3 / 0.3048, 3 / 0.3048);
-                XYZ pt1 = new XYZ(min.X, min.Y, min.Z);
-                XYZ pt2 = new XYZ(max.X, min.Y, min.Z);
-                XYZ pt3 = new XYZ(max.X, max.Y, min.Z);
-                XYZ pt4 = new XYZ(min.X, max.Y, min.Z);
-                Line line1 = Line.CreateBound(pt1, pt2);
-                Line line2 = Line.CreateBound(pt2, pt3);
-                Line line3 = Line.CreateBound(pt3, pt4);
-                Line line4 = Line.CreateBound(pt4, pt1);
-                CurveLoop curveLoop = new CurveLoop();
-                curveLoop.Append(line1);
-                curveLoop.Append(line2);
-                curveLoop.Append(line3);
-                curveLoop.Append(line4);
+                XYZ min = new XYZ(pointMin.X, pointMin.Y, pointMin.Z);
+                XYZ max = new XYZ(pointMax.X - 1, pointMax.Y - 1, pointMax.Z);
 
-                List<CurveLoop> loops = new List<CurveLoop>() { curveLoop };
-                SolidOptions options = new SolidOptions(ElementId.InvalidElementId, ElementId.InvalidElementId);
-                Solid solid = GeometryCreationUtilities.CreateExtrusionGeometry(loops, XYZ.BasisZ, pointMax.Z - pointMin.Z, options);
-                
 
-                var ds = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_GenericModel));
-                ElementTransformUtils.RotateElement(doc, ds.Id, Line.CreateBound(new XYZ(), new XYZ(0, 0, 1)), rotateAngle);
-                ds.ApplicationId = "Application id";
-                ds.ApplicationDataId = "Geometry object id";
-                ds.SetShape(new List<GeometryObject>() { solid });
+                foreach (var visiting in visitings)
+                {
+                    var points = visiting.GetExtremePoints();
+                    var cL = new CurveLoop();
 
-                
-                TaskDialog.Show("DirectShape", $"\n");
+                    cL.Append(Line.CreateBound(points[0], points[1]));
+                    cL.Append(Line.CreateBound(points[1], points[2]));
+                    cL.Append(Line.CreateBound(points[2], points[3]));
+                    cL.Append(Line.CreateBound(points[3], points[0]));
+
+                    var curveLoops = new List<CurveLoop>() { cL };
+                    var solidOptions = new SolidOptions(ElementId.InvalidElementId, ElementId.InvalidElementId);
+                    var solid = GeometryCreationUtilities.CreateExtrusionGeometry(curveLoops, XYZ.BasisZ, pointMax.Z - pointMin.Z, solidOptions);
+
+                    var directShape = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_GenericModel));
+                    directShape.Name = visiting.Name;
+                    directShape.SetShape(new List<GeometryObject>() { solid });
+                }
+
+                TaskDialog.Show("DirectShape", $"Completed");
 
                 trans.Commit();
             }
         }
+
+        //static List<CurveLoop> GetCurves(XYZ[] points)
+        //{
+        //    var curves = new List<CurveLoop>();
+        //
+        //    Line line1 = Line.CreateBound(points[0], points[1]);
+        //    Line line2 = Line.CreateBound(points[1], points[2]);
+        //    Line line3 = Line.CreateBound(points[2], points[3]);
+        //    Line line4 = Line.CreateBound(points[3], points[1]);
+        //    CurveLoop curveLoop = new CurveLoop();
+        //    curveLoop.Append(line1);
+        //    curveLoop.Append(line2);
+        //    curveLoop.Append(line3);
+        //    curveLoop.Append(line4);
+        //}
     }
 }
 
