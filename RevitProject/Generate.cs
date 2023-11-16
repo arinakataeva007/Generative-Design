@@ -1,11 +1,8 @@
-﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
-using RevitProject.Visitings;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http.Headers;
-using System.Windows.Controls;
+using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
 
 namespace RevitProject
 {
@@ -18,20 +15,9 @@ namespace RevitProject
 
             var height = sides[0];
             var width = sides[1];
-
             var squareSpace = height * width;
-
             var visitings = GetVisitings(squareSpace);
-
             var sortVisitings = visitings.OrderByDescending(x => x.SquareMeter).ToList();
-
-            //var kitchen = new Kitchen(new XYZ(), widthMeter: 2.8, squareMeter: 10);
-            //kitchen.RotatePerpendicular();
-            //var hallway = new Hallway(new XYZ(), widthMeter: 1.2, squareMeter: 2.4);
-            //var bathroom = new Bathroom(new XYZ(), widthMeter: 1.7, squareMeter: 4);
-            //bathroom.RotatePerpendicular();
-            //var livingRoom = new LivingRoom(new XYZ(), widthMeter: 3, squareMeter: 12);
-
 
             return MoveVisitings(sortVisitings, extremePointsSpace);
         }
@@ -40,13 +26,13 @@ namespace RevitProject
         {
             var visitings = new List<Visiting> { new Kitchen(), new Hallway(), new Bathroom() };
 
-            if (square < 28)
+            if (square < 28) // студия
                 return visitings;
-            else if (square < 44)
-                return visitings;
-            else if (square < 56)
+            else if (square < 44) // однокомнатная
+                visitings.Add(new LivingRoom());
+            else if (square < 56) // двушка
                 visitings.AddRange(new List<Visiting> { new LivingRoom(), new LivingRoom() });
-            else if (square < 70)
+            else if (square < 70) // трёшка
                 return new List<Visiting> { };
             else
                 return new List<Visiting> { };
@@ -56,8 +42,8 @@ namespace RevitProject
 
         private static List<Visiting> MoveVisitings(List<Visiting> visitings, List<XYZ> extremePointsSpace)
         {
-            var currentX = extremePointsSpace[0].X;
-            var currentY = extremePointsSpace[0].Y;
+            var spaceMinX = extremePointsSpace[0].X;
+            var spaceMinY = extremePointsSpace[0].Y;
             var pointZ = extremePointsSpace[0].Z;
             var maxX = extremePointsSpace[2].X;
             var maxY = extremePointsSpace[2].Y;
@@ -65,28 +51,29 @@ namespace RevitProject
             var movingVisitings = new List<Visiting>();
             var rectangles = new List<Rectangle>();
             var countVisitings = visitings.Count;
-            var indexesRemovingElement = new List<int>();
 
             for (var i = 0; i < countVisitings; i++)
             {
-                if (currentX + visitings[i].WidthFeet <= maxX && currentY + visitings[i].HeightFeet <= maxY)
+                if (spaceMinX + visitings[i].WidthFeet <= maxX && spaceMinY + visitings[i].HeightFeet <= maxY)
                 {
                     if (movingVisitings.Count == 0)
                     {
-                        movingVisitings.Add(DefineVisitingPoint(visitings[i], currentX, currentY, pointZ));
+                        movingVisitings.Add(DefineVisitingPoint(visitings[i], new XYZ(spaceMinX, spaceMinY, pointZ),
+                            visitings[i].WidthMeter, visitings[i].HeightMeter, visitings[i].SquareMeter));
                         rectangles.Add(movingVisitings[i].Rectangle);
                     }
                     else
                     {
                         var newVisiting = GetNewVisiting(visitings[i], movingVisitings, spaceRectangle, pointZ);
-                        // Костыль Проверка на вывод
-                        //TaskDialog.Show("NewVisiting", $"STR-82 {newVisiting}");
-                        movingVisitings.Add(newVisiting);
-                    }    
+
+                        if (newVisiting != null)
+                            movingVisitings.Add(newVisiting);
+                    }
                 }
             }
 
-            TaskDialog.Show("PPP", $"{movingVisitings.Count}\n{movingVisitings[0]}\n{movingVisitings[1]}\n{movingVisitings[2].minPoint}");
+            ProcessVisitingsDistanceBorders(movingVisitings, spaceRectangle);
+            ProcessSizesPlacedVisitings(movingVisitings, spaceRectangle);
 
             return movingVisitings;
         }
@@ -97,7 +84,7 @@ namespace RevitProject
             {
                 try
                 {
-                    var extremePoints = movingVisitings[j].GetExtremePoints().Skip(1);
+                    var extremePoints = movingVisitings[j].GetExtremePoints();
 
                     foreach (var point in extremePoints)
                     {
@@ -105,44 +92,26 @@ namespace RevitProject
 
                         foreach (var newPoint in newPoints)
                         {
-                            var newVisiting = DefineVisitingPoint(visiting, newPoint.X, newPoint.Y, pointZ);
+                            var newVisiting = DefineVisitingPoint(visiting, newPoint, visiting.WidthMeter, visiting.HeightMeter, visiting.SquareMeter);
+                            var rectangle = newVisiting.Rectangle;
 
-                            // Костыль - проверка на вхождение одного прямоугольника в другой
-                            if (newVisiting is Bathroom bathroom)
-                            {
-                                if (spaceRectangle.ContainsRectangle(newVisiting.Rectangle))
-                                    TaskDialog.Show("BathRoom", $"{spaceRectangle.ContainsRectangle(newVisiting.Rectangle)}" +
-                                        $"{newVisiting.Rectangle}\n{spaceRectangle}");
-                            }
-
+                            //Проверка на вхождение в контур
                             if (spaceRectangle.ContainsRectangle(newVisiting.Rectangle))
                             {
-                                var isNotIntersect = true;
+                                newVisiting = ProcessingIntersections(newVisiting, rectangle, movingVisitings, spaceRectangle);
 
-                                foreach (var movingVisiting in movingVisitings)
-                                {
-                                    foreach (var p in movingVisiting.GetExtremePoints())
-                                    {
-                                        // Костыль
-                                        //TaskDialog.Show("STR-122", $"{newVisiting.minPoint}\n{p}");
-                                        if (newVisiting.minPoint.X == p.X && newVisiting.minPoint.Y == p.Y)
-                                        {
-                                            isNotIntersect = false;
-                                            break;
-                                        }
-                                    }
-                                    // Костыль проверка через Rectangle и IntersectsWith
-                                    TaskDialog.Show("Intersect", $"{newVisiting.Rectangle.IntersectsWith(movingVisiting.Rectangle)}" +
-                                        $"\n{newVisiting.Rectangle}\n{movingVisiting.Rectangle}");
-                                    if (movingVisiting.Rectangle.IntersectsWith(newVisiting.Rectangle))
-                                    {
-                                        isNotIntersect = false;
-                                        break;
-                                    }
-                                    if (!isNotIntersect)
-                                        break;
-                                }
-                                if (isNotIntersect)
+                                if (newVisiting != null)
+                                    return newVisiting;
+                            }
+                            else
+                            {
+                                var intersectRectangle = spaceRectangle.GetIntersectionRectangle(rectangle);
+                                newVisiting = DefineVisitingPoint(newVisiting, intersectRectangle.minXminY,
+                                    intersectRectangle.WidthMeter, intersectRectangle.HeightMeter, 0);
+
+                                newVisiting = ProcessingIntersections(newVisiting, newVisiting.Rectangle, movingVisitings, spaceRectangle);
+
+                                if (newVisiting != null)
                                     return newVisiting;
                             }
                         }
@@ -150,29 +119,49 @@ namespace RevitProject
                 }
                 catch (Exception ex)
                 {
-                    TaskDialog.Show("EXCEPTION", $"STR-97 {ex.Message}");
+                    TaskDialog.Show("EXCEPTION", $"STR-96 {ex.Message}");
                 }
-                
-            }
 
+            }
             TaskDialog.Show("PUm", $"STR-120 OUCH {visiting}");
 
-            return visiting;
+            return null;
         }
 
-        private static Visiting DefineVisitingPoint(Visiting visiting, double pointX, double pointY, double pointZ)
+        private static Visiting ProcessingIntersections(Visiting visiting, Rectangle visitingRectangle, List<Visiting> spacedVisitings, Rectangle spaceRectangle)
+        {
+            if (!spacedVisitings.Any(m => m.Rectangle.IntersectsWith(visiting.Rectangle)))
+            {
+                if (spaceRectangle.maxXmaxY.X - visitingRectangle.maxXmaxY.X < 3)
+                {
+                    var newPointX = spaceRectangle.maxXmaxY.X;
+                    var newRectangle = new Rectangle(visitingRectangle.minXminY,
+                        new XYZ(newPointX, visitingRectangle.minXminY.Y, visitingRectangle.minXminY.Z),
+                        new XYZ(newPointX, visitingRectangle.maxXmaxY.Y, visitingRectangle.minXminY.Z), visitingRectangle.minXmaxY);
+
+                    return DefineVisitingPoint(visiting, newRectangle.minXminY, newRectangle.WidthMeter,
+                        newRectangle.HeightMeter, 0);
+                }
+
+                return visiting;
+            }
+
+            return null;
+        }
+
+        private static Visiting DefineVisitingPoint(Visiting visiting, XYZ position,
+            double widthMeter, double heightMeter, double squareMeter)
         {
             Visiting newVisiting;
 
-
             if (visiting is Kitchen)
-                newVisiting = new Kitchen(new XYZ(pointX, pointY, pointZ), visiting.WidthMeter, visiting.HeightMeter, visiting.SquareMeter);
+                newVisiting = new Kitchen(position, widthMeter, heightMeter, squareMeter);
             else if (visiting is Hallway)
-                newVisiting = new Hallway(new XYZ(pointX, pointY, pointZ), visiting.WidthMeter, visiting.HeightMeter, visiting.SquareMeter);
+                newVisiting = new Hallway(position, widthMeter, heightMeter, squareMeter);
             else if (visiting is Bathroom)
-                newVisiting = new Bathroom(new XYZ(pointX, pointY, pointZ), visiting.WidthMeter, visiting.HeightMeter, visiting.SquareMeter);
+                newVisiting = new Bathroom(position, widthMeter, heightMeter, squareMeter);
             else
-                newVisiting = new LivingRoom(new XYZ(pointX, pointY, pointZ), visiting.WidthMeter, visiting.HeightMeter, visiting.SquareMeter);
+                newVisiting = new LivingRoom(position, widthMeter, heightMeter, squareMeter);
 
             return newVisiting;
         }
@@ -180,11 +169,11 @@ namespace RevitProject
         private static List<XYZ> GetNewPoints(XYZ position, List<Visiting> movingVisitings)
         {
             var result = new List<XYZ>();
-            var allVariants = new XYZ[3] 
-            { 
-                new XYZ(position.X + 1, position.Y, position.Z), 
-                new XYZ(position.X, position.Y + 1, position.Z), 
-                new XYZ(position.X + 1, position.Y + 1, position.Z) 
+            var allVariants = new XYZ[3]
+            {
+                new XYZ(position.X + 1, position.Y, position.Z),
+                new XYZ(position.X, position.Y + 1, position.Z),
+                new XYZ(position.X + 1, position.Y + 1, position.Z)
             };
 
             foreach (var variant in allVariants)
@@ -200,9 +189,6 @@ namespace RevitProject
 
                             result.Add(variant);
                         }
-                        //if (visiting.GetExtremePoints().Contains(variant))
-                        //    break;
-                        //result.Add(variant);
                     }
                 }
                 catch (Exception ex)
@@ -214,87 +200,103 @@ namespace RevitProject
             return result;
         }
 
-        private static Visiting DefineNewSizes(Visiting visiting)
+        //private static Visiting DefineNewSizes(Visiting visiting)
+        //{
+        //    var newVisiting = visiting;
+
+
+
+        //    return newVisiting;
+        //}
+
+        private static void ProcessVisitingsDistanceBorders(List<Visiting> visitings, Rectangle spaceRectangle)
         {
-            var newVisiting = visiting;
+            for (var i = 0; i < visitings.Count; i++)
+            { 
+                if (visitings[i].Rectangle.minXminY.X != spaceRectangle.minXminY.X)
+                {
+                    if (!visitings.Any(v => spaceRectangle.minXminY.X <= v.Rectangle.minXminY.X && 
+                        v.Rectangle.minXminY.X <= visitings[i].Rectangle.minXminY.X))
+                    {
+                        var newRectangle = new Rectangle(
+                            new XYZ(spaceRectangle.minXminY.X, visitings[i].Rectangle.minXminY.Y,visitings[i].Rectangle.minXminY.Z), 
+                            new XYZ(spaceRectangle.minXminY.X, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                        visitings[i] = DefineVisitingPoint(visitings[i], newRectangle.minXminY, newRectangle.WidthMeter, newRectangle.HeightMeter, 0);
+                    }
+                }
+                if (visitings[i].Rectangle.maxXmaxY.X != spaceRectangle.maxXmaxY.X)
+                {
+                    if (!visitings.Any(v => visitings[i].Rectangle.maxXmaxY.X <= v.Rectangle.minXminY.X && 
+                        v.Rectangle.minXminY.X <= spaceRectangle.maxXmaxY.X))
+                    {
+                        var newRectangle = new Rectangle(visitings[i].Rectangle.minXminY,
+                            new XYZ(spaceRectangle.maxXmaxY.X, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                        visitings[i] = DefineVisitingPoint(visitings[i], newRectangle.minXminY, newRectangle.WidthMeter, newRectangle.HeightMeter, 0);
+                    }
+                }
+                if (visitings[i].Rectangle.minXminY.Y != spaceRectangle.minXminY.Y)
+                {
+                    if (!visitings.Any(v => spaceRectangle.minXminY.Y <= v.Rectangle.minXminY.Y && 
+                        v.Rectangle.minXminY.Y <= visitings[i].Rectangle.minXminY.Y))
+                    {
+                        var newRectangle = new Rectangle(new XYZ(visitings[i].Rectangle.minXminY.X, spaceRectangle.minXminY.Y,
+                            visitings[i].Rectangle.minXminY.Z), visitings[i].Rectangle.maxXmaxY);
+                        visitings[i] = DefineVisitingPoint(visitings[i], newRectangle.minXminY, newRectangle.WidthMeter, newRectangle.HeightMeter, 0);
+                    }
+                }
+                if (visitings[i].Rectangle.maxXmaxY.Y != spaceRectangle.maxXmaxY.Y)
+                {
+                    if (!visitings.Any(v => visitings[i].Rectangle.maxXmaxY.Y <= v.Rectangle.minXminY.Y &&
+                        v.Rectangle.minXminY.Y <= spaceRectangle.maxXmaxY.Y))
+                    {
+                        var newRectangle = new Rectangle(visitings[i].Rectangle.minXminY, 
+                            new XYZ(visitings[i].Rectangle.maxXmaxY.X, spaceRectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                        visitings[i] = DefineVisitingPoint(visitings[i], newRectangle.minXminY, newRectangle.WidthMeter, newRectangle.HeightMeter, 0);
+                    }
+                }
+            }
+        }
 
+        private static void ProcessSizesPlacedVisitings(List<Visiting> visitings, Rectangle spaceRectangle)
+        {
+            for (var i = 0; i < visitings.Count; i++)
+            {
+                // везде добавить проврку на столкновения
 
-
-            return newVisiting;
+                //if (visitings[i].Rectangle.minXminY.X != spaceRectangle.minXminY.X)
+                //{
+                //    // здесь нужно изменить сортировочку 
+                //    var needed = visitings.Where(v => spaceRectangle.minXminY.X <= v.Rectangle.minXminY.X &&
+                //        v.Rectangle.minXminY.X <= visitings[i].Rectangle.minXminY.X);
+                //    var needed2 = needed.Where(n => n.Rectangle.maxXmaxY.X - visitings[i].Rectangle.minXminY.X > 1).ToArray();
+                //    if (needed2.Length > 0)
+                //    {
+                //        var newRect = new Rectangle(visitings[i].Rectangle.minXminY,
+                //        new XYZ(needed2[0].Rectangle.minXminY.X - 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                //        var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
+                //        visitings[i] = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
+                //    }
+                //}
+                if (visitings[i].Rectangle.maxXmaxY.X != spaceRectangle.maxXmaxY.X)
+                {
+                    var needed = visitings.Where(v => visitings[i].Rectangle.maxXmaxY.X <= v.Rectangle.minXminY.X &&
+                        v.Rectangle.minXminY.X <= spaceRectangle.maxXmaxY.X);
+                    var needed2 = needed.Where(n => n.Rectangle.minXminY.X - visitings[i].Rectangle.maxXmaxY.X > 1).ToArray();
+                    if (needed2.Length > 0)
+                    {
+                        var newRect = new Rectangle(visitings[i].Rectangle.minXminY,
+                        new XYZ(needed2[0].Rectangle.minXminY.X - 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                        var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
+                        visitings[i] = newVisiting;
+                    }
+                }
+                //if (visitings[i].Rectangle.minXminY.Y != spaceRectangle.minXminY.Y)
+                //{
+                //}
+                //if (visitings[i].Rectangle.maxXmaxY.Y != spaceRectangle.maxXmaxY.Y)
+                //{
+                //}
+            }
         }
     }
 }
-
-
-
-
-//while (true)
-//{
-//    for (var i=0; i < visitings.Count; i++)
-//    {
-//        if ((currentX + visitings[i].WidthFeet > maxX && currentY + visitings[i].HeightFeet <= maxY) ||
-//            (currentX + visitings[i].WidthFeet <= maxX && currentY + visitings[i].HeightFeet > maxY))
-//        {
-//            visitings[i].RotatePerpendicular();
-//            if (currentX + visitings[i].WidthFeet <= maxX && currentY + visitings[i].HeightFeet <= maxY)
-//            {
-//                visitings[i] = DefineVisitingPoint(visitings[i], ref currentX, ref currentY, pointZ);
-//                TaskDialog.Show("VISIting", $"{visitings[i]}");
-//            }
-//            else
-//            {
-//                visitings[i] = DefineVisitingPoint(visitings[i], ref currentX, ref currentY, pointZ);
-//                TaskDialog.Show("VISIting", $"{visitings[i]}");
-//            }
-//        }
-//        else if (currentX + visitings[i].WidthFeet <= maxX && currentY + visitings[i].HeightFeet <= maxY)
-//            visitings[i] = DefineVisitingPoint(visitings[i], ref currentX, ref currentY, pointZ);
-//        else
-//            visitings[i] = DefineVisitingPoint(visitings[i], ref currentX, ref currentY, pointZ);
-
-//    }
-
-//    return visitings;
-//}
-
-
-
-
-
-//for (var y = currentY; y <= maxY;)
-//{
-//    var pointsY = new List<double>();
-
-//    for (var x = currentX; x <= maxX;)
-//    {
-//        for (var i = 0; i < visitings.Count; i++)
-//        {
-//            if (x + visitings[i].WidthFeet <= maxX)
-//            {
-//                if (y + visitings[i].HeightFeet <= maxY)
-//                {
-//                    movingVisitings.Add(DefineVisitingPoint(visitings[i], ref x, y, pointZ));
-//                    pointsY.Add(y + visitings[i].HeightFeet);
-//                }
-//                else
-//                {
-//                    visitings[i].RotatePerpendicular();
-//                    if (x + visitings[i].WidthFeet <= maxX)
-//                    {
-//                        movingVisitings.Add(DefineVisitingPoint(visitings[i], ref x, y, pointZ));
-//                        pointsY.Add(y + visitings[i].HeightFeet);
-//                    }
-//                    else
-//                        continue;
-//                }
-//            }
-//            else
-//                continue;
-//        }
-
-//        if (x != maxX)
-//            break;
-//    }
-
-//    y = pointsY.Max();
-//}

@@ -38,8 +38,7 @@ namespace RevitProject
                 var pointMin = boundingBox.Min;
                 var pointMax = boundingBox.Max;
 
-                TaskDialog.Show("FamilyInstance", "Selected FamilyInstance\n" +
-                    $"\n{sizes[0]}\n{sizes[1]}\n{sizes[2]}\n{computeCentroid}\n");
+                TaskDialog.Show("FamilyInstance", $"Selected FamilyInstance");
 
                 //var sketchPlane = SketchPlane.Create(doc, plane);
 
@@ -58,8 +57,6 @@ namespace RevitProject
                 };
 
                 var shapes = Generate.GetShapes(sizes, points);
-
-
 
                 CreateNew(doc, pointMin, pointMax, shapes);
             }
@@ -102,11 +99,10 @@ namespace RevitProject
 
             foreach (Edge edge in edges)
             {
-                var sizeOfM = Math.Round(edge.ApproximateLength * 0.3048);
+                var sizeOfM = Math.Round(edge.ApproximateLength * 0.3048, 3);
 
                 if (!sizes.Contains(sizeOfM))
                     sizes.Add(sizeOfM);
-
             }
 
             return sizes;
@@ -124,6 +120,7 @@ namespace RevitProject
 
                 foreach (var visiting in visitings)
                 {
+                    //TaskDialog.Show("STR-123", "");
                     var points = visiting.GetExtremePoints();
                     var cL = new CurveLoop();
 

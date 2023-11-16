@@ -1,17 +1,15 @@
 ﻿using Autodesk.Revit.DB;
-using System.Drawing;
 
 namespace RevitProject
 {
     public abstract class Visiting
     {
-        public abstract string Name {  get; }
-
+        public abstract string Name { get; }
         protected abstract double MinWidthMeter { get; }
         protected abstract double MinHeightMeter { get; }
         protected abstract double MinSquareMeter { get; }
 
-        public XYZ minPoint; // костыль (public)
+        protected XYZ minPoint;
 
         protected double widthMeter;
         public double WidthMeter
@@ -65,10 +63,14 @@ namespace RevitProject
             }
         }
 
+        protected Rectangle rectangle;
+
         public Rectangle Rectangle
         {
             get
             {
+                if (rectangle != null)
+                    return rectangle;
                 if (GetExtremePoints().Length == 4)
                     return new Rectangle(GetExtremePoints());
 
@@ -107,16 +109,32 @@ namespace RevitProject
             this.squareMeter = squareMeter;
         }
 
+        //public Visiting(Rectangle rectangle)
+        //{
+
+        //}
+
         public XYZ[] GetExtremePoints()
         {
             var extremePoints = new XYZ[4];
-            var min = minPoint;
-            var max = min + new XYZ(widthMeter / 0.3048, heightMeter / 0.3048, 3 / 0.3048);
 
-            extremePoints[0] = new XYZ(min.X, min.Y, min.Z);
-            extremePoints[1] = new XYZ(max.X, min.Y, min.Z);
-            extremePoints[2] = new XYZ(max.X, max.Y, min.Z);
-            extremePoints[3] = new XYZ(min.X, max.Y, min.Z);
+            if (minPoint != null)
+            {
+                var min = minPoint;
+                var max = min + new XYZ(widthMeter / 0.3048, heightMeter / 0.3048, 3 / 0.3048);
+
+                extremePoints[0] = new XYZ(min.X, min.Y, min.Z);
+                extremePoints[1] = new XYZ(max.X, min.Y, min.Z);
+                extremePoints[2] = new XYZ(max.X, max.Y, min.Z);
+                extremePoints[3] = new XYZ(min.X, max.Y, min.Z);
+            }
+            if (rectangle != null)
+            {
+                extremePoints[0] = rectangle.minXminY;
+                extremePoints[1] = rectangle.maxXminY;
+                extremePoints[2] = rectangle.maxXmaxY;
+                extremePoints[3] = rectangle.minXmaxY;
+            }
 
             return extremePoints;
         }

@@ -1,4 +1,6 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.UI;
+using System;
 
 namespace RevitProject
 {
@@ -8,6 +10,18 @@ namespace RevitProject
         public readonly XYZ maxXminY;
         public readonly XYZ maxXmaxY;
         public readonly XYZ minXmaxY;
+
+        public double WidthMeter { get { return (maxXmaxY.X - minXminY.X) * 0.3028; } }
+        public double HeightMeter { get { return (minXmaxY.Y - minXminY.Y) * 0.3028; } }
+
+        public Rectangle(XYZ minXminY, XYZ maxXmaxY)
+        {
+            this.minXminY = minXminY;
+            this.maxXmaxY = maxXmaxY;
+
+            maxXminY = new XYZ(maxXmaxY.X, minXminY.Y, minXminY.Z);
+            minXmaxY = new XYZ(minXminY.X, maxXmaxY.Y, minXminY.Z);
+        }
 
         public Rectangle(XYZ minXminY, XYZ maxXminY, XYZ maxXmaxY, XYZ minXmaxY)
         {
@@ -28,7 +42,7 @@ namespace RevitProject
         public bool IntersectsWith(Rectangle other)
         {
             return !(minXminY.X > other.maxXmaxY.X || other.minXminY.X > maxXmaxY.X || 
-                maxXmaxY.Y > other.minXminY.Y || other.maxXmaxY.Y > minXminY.Y);
+                minXminY.Y > other.maxXmaxY.Y || other.minXminY.Y > maxXmaxY.Y);
         }
 
         public bool ContainsRectangle(Rectangle other)
@@ -37,9 +51,31 @@ namespace RevitProject
                 other.maxXmaxY.X <= maxXmaxY.X && other.maxXmaxY.Y <= maxXmaxY.Y);
         }
 
+        public Rectangle GetIntersectionRectangle(Rectangle other)
+        {
+            if (IntersectsWith(other))
+            {
+                var minX = Math.Max(minXminY.X, other.minXminY.X);
+                var minY = Math.Max(minXminY.Y, other.minXminY.Y);
+                var maxX = Math.Min(maxXmaxY.X, other.maxXmaxY.X);
+                var maxY = Math.Min(maxXmaxY.Y, other.maxXmaxY.Y);
+                var pointZ = minXminY.Z;
+
+                //TaskDialog.Show("Method(STR-45)", $"{minX}\n{minY}\n{maxX}\n{maxY}");
+
+                return new Rectangle(new XYZ(minX, minY, pointZ), new XYZ(maxX, minY, pointZ), 
+                    new XYZ(maxX, maxY, pointZ), new XYZ(minX, maxY, pointZ));
+            }
+
+            return null;
+        }
+
         public override string ToString()
         {
-            return $"MIN - {minXminY}\n{maxXminY}\nMAX - {maxXmaxY}\n{minXmaxY}";
+            return $"MinX_MinY - {minXminY}\n" +
+                $"MaxX_MinY{maxXminY}\n" +
+                $"MaxX_MaxY - {maxXmaxY}\n" +
+                $"MinX_MaxY{minXmaxY}";
         }
     }
 }
