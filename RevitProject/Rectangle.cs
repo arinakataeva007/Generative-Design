@@ -11,8 +11,8 @@ namespace RevitProject
         public readonly XYZ maxXmaxY;
         public readonly XYZ minXmaxY;
 
-        public double WidthMeter { get { return (maxXmaxY.X - minXminY.X) * 0.3028; } }
-        public double HeightMeter { get { return (minXmaxY.Y - minXminY.Y) * 0.3028; } }
+        public double WidthMeter { get { return (maxXmaxY.X - minXminY.X) * 0.3048; } }
+        public double HeightMeter { get { return (minXmaxY.Y - minXminY.Y) * 0.3048; } }
 
         public Rectangle(XYZ minXminY, XYZ maxXmaxY)
         {
@@ -60,8 +60,6 @@ namespace RevitProject
                 var maxX = Math.Min(maxXmaxY.X, other.maxXmaxY.X);
                 var maxY = Math.Min(maxXmaxY.Y, other.maxXmaxY.Y);
                 var pointZ = minXminY.Z;
-
-                //TaskDialog.Show("Method(STR-45)", $"{minX}\n{minY}\n{maxX}\n{maxY}");
 
                 return new Rectangle(new XYZ(minX, minY, pointZ), new XYZ(maxX, minY, pointZ), 
                     new XYZ(maxX, maxY, pointZ), new XYZ(minX, maxY, pointZ));

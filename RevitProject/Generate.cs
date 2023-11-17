@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 
@@ -219,8 +220,8 @@ namespace RevitProject
                         v.Rectangle.minXminY.X <= visitings[i].Rectangle.minXminY.X))
                     {
                         var newRectangle = new Rectangle(
-                            new XYZ(spaceRectangle.minXminY.X, visitings[i].Rectangle.minXminY.Y,visitings[i].Rectangle.minXminY.Z), 
-                            new XYZ(spaceRectangle.minXminY.X, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                            new XYZ(spaceRectangle.minXminY.X, visitings[i].Rectangle.minXminY.Y,visitings[i].Rectangle.minXminY.Z),
+                            visitings[i].Rectangle.maxXmaxY);
                         visitings[i] = DefineVisitingPoint(visitings[i], newRectangle.minXminY, newRectangle.WidthMeter, newRectangle.HeightMeter, 0);
                     }
                 }
@@ -261,42 +262,103 @@ namespace RevitProject
         {
             for (var i = 0; i < visitings.Count; i++)
             {
-                // везде добавить проврку на столкновения
+                if (visitings[i].Rectangle.minXminY.X != spaceRectangle.minXminY.X)
+                {
+                    var needed = visitings.Where(v => spaceRectangle.minXminY.X <= v.Rectangle.minXminY.X &&
+                        v.Rectangle.minXminY.X <= visitings[i].Rectangle.minXminY.X)
+                        .Where(n => visitings[i].Rectangle.minXminY.X - n.Rectangle.maxXmaxY.X > 1)
+                        .Where(n => CheckBoundsOnY(visitings[i].Rectangle, n.Rectangle))
+                        .OrderBy(n => visitings[i].Rectangle.minXminY.X - n.Rectangle.maxXmaxY.X)
+                        .FirstOrDefault();
+                    if (needed != null)
+                    {
+                        TaskDialog.Show("STR-274", $"{needed.Rectangle}\n{visitings[i].Rectangle}");
 
-                //if (visitings[i].Rectangle.minXminY.X != spaceRectangle.minXminY.X)
-                //{
-                //    // здесь нужно изменить сортировочку 
-                //    var needed = visitings.Where(v => spaceRectangle.minXminY.X <= v.Rectangle.minXminY.X &&
-                //        v.Rectangle.minXminY.X <= visitings[i].Rectangle.minXminY.X);
-                //    var needed2 = needed.Where(n => n.Rectangle.maxXmaxY.X - visitings[i].Rectangle.minXminY.X > 1).ToArray();
-                //    if (needed2.Length > 0)
-                //    {
-                //        var newRect = new Rectangle(visitings[i].Rectangle.minXminY,
-                //        new XYZ(needed2[0].Rectangle.minXminY.X - 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
-                //        var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
-                //        visitings[i] = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
-                //    }
-                //}
+                        var newRect = new Rectangle(
+                            new XYZ(needed.Rectangle.minXminY.X + 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z),
+                            visitings[i].Rectangle.minXminY);
+
+                        var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
+                        newVisiting = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
+                        if (newVisiting != null)
+                            visitings[i] = newVisiting;
+                    }
+                }
                 if (visitings[i].Rectangle.maxXmaxY.X != spaceRectangle.maxXmaxY.X)
                 {
                     var needed = visitings.Where(v => visitings[i].Rectangle.maxXmaxY.X <= v.Rectangle.minXminY.X &&
-                        v.Rectangle.minXminY.X <= spaceRectangle.maxXmaxY.X);
-                    var needed2 = needed.Where(n => n.Rectangle.minXminY.X - visitings[i].Rectangle.maxXmaxY.X > 1).ToArray();
-                    if (needed2.Length > 0)
+                        v.Rectangle.minXminY.X <= spaceRectangle.maxXmaxY.X)
+                        .Where(n => n.Rectangle.minXminY.X - visitings[i].Rectangle.maxXmaxY.X > 1)
+                        .Where(n => CheckBoundsOnY(visitings[i].Rectangle, n.Rectangle))
+                        .OrderBy(n => n.Rectangle.minXminY.X - visitings[i].Rectangle.maxXmaxY.X)
+                        .FirstOrDefault();
+                    if (needed != null)
                     {
                         var newRect = new Rectangle(visitings[i].Rectangle.minXminY,
-                        new XYZ(needed2[0].Rectangle.minXminY.X - 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                        new XYZ(needed.Rectangle.minXminY.X - 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z));
+                        var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
+                        newVisiting = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
+                        if (newVisiting != null)
+                            visitings[i] = newVisiting;
+                    }
+                }
+                if (visitings[i].Rectangle.minXminY.Y != spaceRectangle.minXminY.Y)
+                {
+                    var needed = visitings.Where(v => spaceRectangle.minXminY.Y <= v.Rectangle.minXminY.Y &&
+                        v.Rectangle.minXminY.Y <= visitings[i].Rectangle.minXminY.Y)
+                        .Where(n => visitings[i].Rectangle.minXminY.Y - n.Rectangle.maxXmaxY.Y > 1)
+                        .Where(n => CheckBoundsOnX(visitings[i].Rectangle, n.Rectangle))
+                        .OrderBy(n => visitings[i].Rectangle.minXminY.Y - n.Rectangle.maxXmaxY.Y)
+                        .FirstOrDefault();
+                    if (needed != null)
+                    {
+                        var newRect = new Rectangle(
+                            new XYZ(visitings[i].Rectangle.minXminY.X, needed.Rectangle.minXminY.Y + 1, visitings[i].Rectangle.maxXmaxY.Z),
+                            visitings[i].Rectangle.minXminY);
+
+                        var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
+                        newVisiting = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
+                        if (newVisiting != null)
+                            visitings[i] = newVisiting;
+                    }
+                }
+                if (visitings[i].Rectangle.maxXmaxY.Y != spaceRectangle.maxXmaxY.Y)
+                {
+                    var needed = visitings.Where(v => visitings[i].Rectangle.maxXmaxY.Y <= v.Rectangle.minXminY.Y &&
+                        v.Rectangle.minXminY.Y <= spaceRectangle.maxXmaxY.Y)
+                        .Where(n => n.Rectangle.minXminY.Y - visitings[i].Rectangle.maxXmaxY.Y > 1)
+                        .Where(n => CheckBoundsOnX(visitings[i].Rectangle, n.Rectangle))
+                        .OrderBy(n => n.Rectangle.minXminY.Y - visitings[i].Rectangle.maxXmaxY.Y)
+                        .FirstOrDefault();
+                    if (needed != null)
+                    {
+                        var newRect = new Rectangle(visitings[i].Rectangle.minXminY,
+                        new XYZ(visitings[i].Rectangle.maxXmaxY.X, needed.Rectangle.minXminY.Y - 1, visitings[i].Rectangle.maxXmaxY.Z));
                         var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
                         visitings[i] = newVisiting;
                     }
                 }
-                //if (visitings[i].Rectangle.minXminY.Y != spaceRectangle.minXminY.Y)
-                //{
-                //}
-                //if (visitings[i].Rectangle.maxXmaxY.Y != spaceRectangle.maxXmaxY.Y)
-                //{
-                //}
             }
+        }
+
+        private static bool CheckBoundsOnY(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            if (rectangle1.minXminY.Y == rectangle2.minXminY.Y || rectangle1.maxXmaxY.Y == rectangle2.maxXmaxY.Y)
+                return true;
+            else if (rectangle1.minXminY.Y > rectangle2.minXminY.Y)
+                return rectangle1.minXminY.Y <= rectangle2.maxXmaxY.Y;
+            else
+                return rectangle1.maxXmaxY.Y >= rectangle2.minXminY.Y;
+        }
+
+        private static bool CheckBoundsOnX(Rectangle rectangle1, Rectangle rectangle2)
+        {
+            if (rectangle1.minXminY.X == rectangle2.minXminY.X || rectangle1.maxXmaxY.X == rectangle2.maxXmaxY.X)
+                return true;
+            else if (rectangle1.minXminY.X > rectangle2.minXminY.X)
+                return rectangle1.minXminY.X <= rectangle2.maxXmaxY.X;
+            else
+                return rectangle1.maxXmaxY.X >= rectangle2.minXminY.X;
         }
     }
 }
