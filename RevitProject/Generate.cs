@@ -129,23 +129,25 @@ namespace RevitProject
             return null;
         }
 
+        private static bool CheckIntersections(Visiting visiting, List<Visiting> spacedVisitings)
+        {
+            var intersectionVisitings = spacedVisitings.Where(m => m.Rectangle.IntersectsWith(visiting.Rectangle)).ToList();
+
+            if (intersectionVisitings.Count == 0) return false;
+            else if (intersectionVisitings.Count == 1)
+            {
+                if (intersectionVisitings[0].Name == visiting.Name && 
+                    visiting.Rectangle.ContainsRectangle(intersectionVisitings[0].Rectangle))
+                    return false;
+            }
+
+            return true;
+        }
+
         private static Visiting ProcessingIntersections(Visiting visiting, Rectangle visitingRectangle, List<Visiting> spacedVisitings, Rectangle spaceRectangle)
         {
-            if (!spacedVisitings.Any(m => m.Rectangle.IntersectsWith(visiting.Rectangle)))
-            {
-                if (spaceRectangle.maxXmaxY.X - visitingRectangle.maxXmaxY.X < 3)
-                {
-                    var newPointX = spaceRectangle.maxXmaxY.X;
-                    var newRectangle = new Rectangle(visitingRectangle.minXminY,
-                        new XYZ(newPointX, visitingRectangle.minXminY.Y, visitingRectangle.minXminY.Z),
-                        new XYZ(newPointX, visitingRectangle.maxXmaxY.Y, visitingRectangle.minXminY.Z), visitingRectangle.minXmaxY);
-
-                    return DefineVisitingPoint(visiting, newRectangle.minXminY, newRectangle.WidthMeter,
-                        newRectangle.HeightMeter, 0);
-                }
-
+            if (!CheckIntersections(visiting, spacedVisitings))
                 return visiting;
-            }
 
             return null;
         }
@@ -200,15 +202,6 @@ namespace RevitProject
 
             return result;
         }
-
-        //private static Visiting DefineNewSizes(Visiting visiting)
-        //{
-        //    var newVisiting = visiting;
-
-
-
-        //    return newVisiting;
-        //}
 
         private static void ProcessVisitingsDistanceBorders(List<Visiting> visitings, Rectangle spaceRectangle)
         {
@@ -272,11 +265,9 @@ namespace RevitProject
                         .FirstOrDefault();
                     if (needed != null)
                     {
-                        TaskDialog.Show("STR-274", $"{needed.Rectangle}\n{visitings[i].Rectangle}");
-
                         var newRect = new Rectangle(
-                            new XYZ(needed.Rectangle.minXminY.X + 1, visitings[i].Rectangle.maxXmaxY.Y, visitings[i].Rectangle.maxXmaxY.Z),
-                            visitings[i].Rectangle.minXminY);
+                            new XYZ(needed.Rectangle.maxXmaxY.X + 1, visitings[i].Rectangle.minXminY.Y, visitings[i].Rectangle.minXminY.Z),
+                            visitings[i].Rectangle.maxXmaxY);
 
                         var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
                         newVisiting = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
@@ -313,7 +304,7 @@ namespace RevitProject
                     if (needed != null)
                     {
                         var newRect = new Rectangle(
-                            new XYZ(visitings[i].Rectangle.minXminY.X, needed.Rectangle.minXminY.Y + 1, visitings[i].Rectangle.maxXmaxY.Z),
+                            new XYZ(visitings[i].Rectangle.minXminY.X, needed.Rectangle.maxXmaxY.Y + 1, visitings[i].Rectangle.maxXmaxY.Z),
                             visitings[i].Rectangle.minXminY);
 
                         var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
@@ -335,7 +326,9 @@ namespace RevitProject
                         var newRect = new Rectangle(visitings[i].Rectangle.minXminY,
                         new XYZ(visitings[i].Rectangle.maxXmaxY.X, needed.Rectangle.minXminY.Y - 1, visitings[i].Rectangle.maxXmaxY.Z));
                         var newVisiting = DefineVisitingPoint(visitings[i], newRect.minXminY, newRect.WidthMeter, newRect.HeightMeter, 0);
-                        visitings[i] = newVisiting;
+                        newVisiting = ProcessingIntersections(newVisiting, newVisiting.Rectangle, visitings, spaceRectangle);
+                        if (newVisiting != null)
+                            visitings[i] = newVisiting;
                     }
                 }
             }
