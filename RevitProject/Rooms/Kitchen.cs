@@ -2,7 +2,7 @@
 
 namespace RevitProject
 {
-    public class Kitchen : Visiting
+    public class Kitchen : Room
     {
         public override string Name => "Kitchen";
 
@@ -17,8 +17,8 @@ namespace RevitProject
         public Kitchen(XYZ minPoint) : base(minPoint) { }
 
         public Kitchen(XYZ minPoint, double widthMeter = 0, double heightMeter = 0, double squareMeter = 0) :
-            base(minPoint, widthMeter, heightMeter, squareMeter)
-        {
-        }
+            base(minPoint, widthMeter, heightMeter, squareMeter) { }
+
+        public Kitchen(Rectangle rectangle) : base(rectangle) { }
     }
 }

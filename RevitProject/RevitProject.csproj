@@ -69,12 +69,12 @@
     <Compile Include="UserWindow1.xaml.cs">
       <DependentUpon>UserWindow1.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Visitings\Bathroom.cs" />
-    <Compile Include="Visitings\Hallway.cs" />
-    <Compile Include="Visitings\Kitchen.cs" />
-    <Compile Include="Visitings\LivingRoom.cs" />
-    <Compile Include="Visitings\TempTests.cs" />
-    <Compile Include="Visitings\Visiting.cs" />
+    <Compile Include="Rooms\Bathroom.cs" />
+    <Compile Include="Rooms\Hallway.cs" />
+    <Compile Include="Rooms\Kitchen.cs" />
+    <Compile Include="Rooms\LivingRoom.cs" />
+    <Compile Include="Rooms\TempTests.cs" />
+    <Compile Include="Rooms\Room.cs" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />

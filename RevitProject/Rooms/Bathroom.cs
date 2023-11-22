@@ -2,7 +2,7 @@
 
 namespace RevitProject
 {
-    internal class Bathroom : Visiting
+    internal class Bathroom : Room
     {
         public override string Name => "Bathroom";
 
@@ -17,9 +17,8 @@ namespace RevitProject
         public Bathroom(XYZ minPoint) : base(minPoint) { }
 
         public Bathroom(XYZ minPoint, double widthMeter = 0, double heightMeter = 0, double squareMeter = 0) :
-            base(minPoint, widthMeter, heightMeter, squareMeter)
-        {
-        }
-
+            base(minPoint, widthMeter, heightMeter, squareMeter) { }
+        
+        public Bathroom(Rectangle rectangle) : base(rectangle) { }
     }
 }

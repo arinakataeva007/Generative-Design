@@ -13,6 +13,7 @@ namespace RevitProject
 
         public double WidthMeter { get { return (maxXmaxY.X - minXminY.X) * 0.3048; } }
         public double HeightMeter { get { return (minXmaxY.Y - minXminY.Y) * 0.3048; } }
+        public double SquareMeter { get { return WidthMeter * HeightMeter; } }
 
         public Rectangle(XYZ minXminY, XYZ maxXmaxY)
         {
