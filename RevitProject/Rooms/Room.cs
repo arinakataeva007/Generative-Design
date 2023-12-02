@@ -1,4 +1,5 @@
 ﻿using Autodesk.Revit.DB;
+using Autodesk.Revit.DB.Mechanical;
 using System.Windows.Media;
 
 namespace RevitProject
@@ -114,6 +115,7 @@ namespace RevitProject
         {
             this.rectangle = rectangle;
 
+            minPoint = rectangle.minXminY;
             widthMeter = rectangle.WidthMeter;
             heightMeter = rectangle.HeightMeter;
             squareMeter = rectangle.SquareMeter;
@@ -148,6 +150,10 @@ namespace RevitProject
         {
             (widthMeter, heightMeter) = (heightMeter, widthMeter);
         }
+
+        public bool CanReduceWidthBy(double value) => WidthMeter - value * 0.3048 >= MinWidthMeter;
+
+        public bool CanReduceHeightBy(double value) => HeightMeter - value * 0.3048 >= MinHeightMeter;
 
         public static Room CreateNewRoom(Room room, Rectangle rectangle)
         {

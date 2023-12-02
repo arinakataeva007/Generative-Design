@@ -8,7 +8,7 @@ namespace RevitProject
 
         protected override double MinWidthMeter => 3;
 
-        protected override double MinHeightMeter => 3;
+        protected override double MinHeightMeter => MinSquareMeter / MinWidthMeter;
 
         protected override double MinSquareMeter => 12;
 

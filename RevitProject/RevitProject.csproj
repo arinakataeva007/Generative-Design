@@ -73,7 +73,6 @@
     <Compile Include="Rooms\Hallway.cs" />
     <Compile Include="Rooms\Kitchen.cs" />
     <Compile Include="Rooms\LivingRoom.cs" />
-    <Compile Include="Rooms\TempTests.cs" />
     <Compile Include="Rooms\Room.cs" />
   </ItemGroup>
   <ItemGroup>
