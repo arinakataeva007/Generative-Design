@@ -1,11 +1,8 @@
 ﻿using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
-using Autodesk.Revit.UI.Selection;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-
 
 namespace RevitProject
 {
@@ -13,65 +10,35 @@ namespace RevitProject
     [Regeneration(RegenerationOption.Manual)]
     public class Class1 : IExternalCommand
     {
-        readonly UserWindow1 userWindow1 = new UserWindow1();
+        //readonly MainWindow userWindow1 = new MainWindow();
 
-        private static ExternalCommandData commandData1;
+        //private static ExternalCommandData commandData1;
 
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             //userWindow1.ShowDialog();
-
-            commandData1 = commandData;
+            //commandData1 = commandData;
 
             var uiApp = commandData.Application;
             var doc = uiApp.ActiveUIDocument.Document;
-            var activeView = doc.ActiveView;
 
-            var pickedRef = uiApp.ActiveUIDocument.Selection.PickObject(ObjectType.Subelement, "Выберите стену");
-            var userClickPoint = pickedRef.GlobalPoint;
-            var selectedElement = doc.GetElement(pickedRef);
+            var contourRoom = ProcessingContour.GetContourRoom(doc, uiApp);
 
-            if (selectedElement is FamilyInstance)
-            {
-                var familyInstance = selectedElement as FamilyInstance;
+            //TaskDialog.Show("36", $"{contourRoom.GeometricShape}\n{contourRoom.SideWithDoor}\n{contourRoom.SideWithWindow}");
 
-                var transform = familyInstance.GetTotalTransform();
 
-                GetBoundingBoxRotatedElement(doc, familyInstance, transform, userClickPoint);
+            //var transform = familyInstance.GetTotalTransform();
 
-                var geometry = familyInstance.get_Geometry(new Options());
-                var boundingBox = geometry.GetBoundingBox();
-                var geometryInstance = GetGeometryInstance(geometry);
-                var geometryElement = geometryInstance.GetInstanceGeometry();
-                var solid = GetSolid(geometryElement);
-                var computeCentroid = solid.ComputeCentroid();
-                var sizes = GetSizeSides(solid);
+            //    GetBoundingBoxRotatedElement(doc, familyInstance, transform, userClickPoint);
 
-                //TaskDialog.Show("50", $"{transform.BasisX}\n{transform.BasisY}");
 
-                //if (transform.BasisX != XYZ.BasisX && transform.BasisY != XYZ.BasisY)
-                //    boundingBox = GetBoundingBoxRotatedElement(doc, familyInstance, transform, boundingBox.Min);
+            //    //if (transform.BasisX != XYZ.BasisX && transform.BasisY != XYZ.BasisY)
+            //    //    boundingBox = GetBoundingBoxRotatedElement(doc, familyInstance, transform, boundingBox.Min);
 
-                var pointMin = boundingBox.Min;
-                var pointMax = boundingBox.Max;
 
-                //TaskDialog.Show("FamilyInstance", $"Selected FamilyInstance\n{v.BasisX}\n{v.BasisY}\n{v.BasisZ}" +
-                //    $"\n{boundingBox.Max}\n{boundingBox.Min}\n{sizes[0]}\n{sizes[1]}");
+            var shapes = Generate.GetShapes(contourRoom);
 
-                var points = new List<XYZ>()
-                {
-                    pointMin,
-                    new XYZ(pointMax.X, pointMin.Y, pointMin.Z),
-                    new XYZ(pointMax.X, pointMax.Y, pointMin.Z),
-                    new XYZ(pointMin.X, pointMax.Y, pointMin.Z)
-                };
-
-                var shapes = Generate.GetShapes(sizes, points);
-
-                CreateNewDirectShape(doc, pointMin, pointMax, shapes, transform);
-            }
-            else
-                TaskDialog.Show("Null", "Нужно тыкнуть в другое место");
+            CreateNewDirectShape(doc, contourRoom.GeometricShape.ExtremePoints[0], contourRoom.GeometricShape.ExtremePoints[2], shapes);
 
             return Result.Succeeded;
         }
@@ -106,50 +73,8 @@ namespace RevitProject
 
             return boundingBox;
         } 
-        
-        public static GeometryInstance GetGeometryInstance(GeometryElement geometryElement)
-        {
-            foreach (var element in geometryElement)
-            {
-                if (element is GeometryInstance geometryInstance)
-                    return geometryInstance;
-            }
 
-            return null;
-        }
-
-        public static Solid GetSolid(GeometryElement geometryElement)
-        {
-            foreach (var element in geometryElement)
-            {
-                if (element is Solid solid)
-                {
-                    if (solid.Volume > 0)
-                        return solid;
-                }
-            }
-
-            return null;
-        }
-
-        public static List<double> GetSizeSides(Solid solid)
-        {
-            var sizes = new List<double>();
-
-            var edges = solid.Edges;
-
-            foreach (Edge edge in edges)
-            {
-                var sizeOfM = Math.Round(edge.ApproximateLength * 0.3048, 3);
-
-                if (!sizes.Contains(sizeOfM))
-                    sizes.Add(sizeOfM);
-            }
-
-            return sizes;
-        }
-
-        public static void CreateNewDirectShape(Document doc, XYZ pointMin, XYZ pointMax, List<List<Room>> variants, Transform transform)
+        public static void CreateNewDirectShape(Document doc, XYZ pointMin, XYZ pointMax, List<List<Room>> variants)
         {
             using (Transaction trans = new Transaction(doc, "Create Box DirectShape"))
             {
@@ -161,7 +86,7 @@ namespace RevitProject
                 {
                     foreach (var room in variant)
                     {
-                        var points = room.GetExtremePoints().Select(p => p + minPosition).ToArray();
+                        var points = room.Rectangle.ExtremePoints.Select(p => p + minPosition).ToArray();
                         var cL = new CurveLoop();
 
                         cL.Append(Line.CreateBound(points[0], points[1]));
@@ -200,3 +125,45 @@ namespace RevitProject
 //var categories = doc.Settings.Categories;
 //var el = categories.get_Item(BuiltInCategory.OST_Walls);
 //AssemblyInstance.Create(doc, new List<ElementId>() { familyInstance.Id, newInstance.Id }, el.Id);
+
+
+
+
+
+//Создание контура из стен (Не работает!)
+//private static void CreateContourOfTheWalls(Document document, BoundingBoxXYZ contour)
+//{
+//    var movement = new XYZ(contour.Max.X - contour.Min.X + 10, 0, 0);
+
+//    var newPoint1 = contour.Min + movement;
+//    var newPoint2 = new XYZ(contour.Max.X, contour.Min.Y, contour.Min.Z) + movement;
+//    var newPoint3 = new XYZ(contour.Max.X, contour.Max.Y, contour.Min.Z) + movement;
+//    var newPoint4 = new XYZ(contour.Min.X, contour.Max.Y, contour.Min.Z) + movement;
+
+//    using (Transaction transaction = new Transaction(document, "Create contour of the walls"))
+//    {
+//        transaction.Start();
+
+//        var wallLine1 = Line.CreateBound(newPoint1, newPoint2);
+//        var wallLine2 = Line.CreateBound(newPoint2, newPoint3);
+//        var wallLine3 = Line.CreateBound(newPoint3, newPoint4);
+//        var wallLine4 = Line.CreateBound(newPoint4, newPoint1);
+
+//        var cL = new List<Curve>()
+//        {
+//            Line.CreateBound(newPoint1, newPoint2),
+//            Line.CreateBound(newPoint2, newPoint3),
+//            Line.CreateBound(newPoint3, newPoint4),
+//            Line.CreateBound(newPoint4, newPoint1)
+//        };
+
+//        //var wall1 = Wall.Create(document, wallLine1, new ElementId(BuiltInCategory.OST_Walls), false);
+//        //var wall2 = Wall.Create(document, wallLine2, new ElementId(BuiltInCategory.OST_Walls), false);
+//        //var wall3 = Wall.Create(document, wallLine3, new ElementId(BuiltInCategory.OST_Walls), false);
+//        //var wall4 = Wall.Create(document, wallLine4, new ElementId(BuiltInCategory.OST_Walls), false);
+
+//        var walls = Wall.Create(document, cL, false);
+
+//        transaction.Commit();
+//    }
+//}

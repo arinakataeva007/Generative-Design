@@ -49,3 +49,6 @@ D:\chern\Documents\Generative-Design\RevitProject\obj\Debug\RevitProject.csproj.
 D:\chern\Documents\Generative-Design\RevitProject\obj\Debug\RevitProject.csproj.CopyComplete
 D:\chern\Documents\Generative-Design\RevitProject\obj\Debug\RevitProject.dll
 D:\chern\Documents\Generative-Design\RevitProject\obj\Debug\RevitProject.pdb
+D:\chern\Documents\Generative-Design\RevitProject\bin\Debug\UserWindow.exe
+D:\chern\Documents\Generative-Design\RevitProject\bin\Debug\UserWindow.pdb
+D:\chern\Documents\Generative-Design\RevitProject\bin\Debug\UserWindow.exe.config

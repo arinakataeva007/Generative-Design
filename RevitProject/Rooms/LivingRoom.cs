@@ -8,9 +8,11 @@ namespace RevitProject
 
         protected override double MinWidthMeter => 3;
 
-        protected override double MinHeightMeter => MinSquareMeter / MinWidthMeter;
+        protected override double MinHeightMeter => 3;
 
-        protected override double MinSquareMeter => 12;
+        protected override double MinSquareMeter => MinWidthMeter * MinHeightMeter;
+
+        public override bool canNearWindow => true;
 
         public LivingRoom() : base() { }
 
@@ -19,6 +21,21 @@ namespace RevitProject
         public LivingRoom(XYZ minPoint, double widthMeter = 0, double heightMeter = 0, double squareMeter = 0) : 
             base(minPoint, widthMeter, heightMeter, squareMeter) { }
 
-        public LivingRoom(Rectangle rectangle) : base(rectangle) { }
+        public LivingRoom(Rectangle2D rectangle) : base(rectangle) { }
+
+        public override Room CreateNew(Rectangle2D newRectangle)
+        {
+            return new LivingRoom(newRectangle);
+        }
+
+        public override Room CreateNew(XYZ pointMin, XYZ pointMax)
+        {
+            return new LivingRoom(new Rectangle2D(pointMin, pointMax));
+        }
+
+        public override bool IsCorectPositionRelativeWalls(Side2D wallWithDoor, Side2D wallWithWindow)
+        {
+            return true;
+        }
     }
 }

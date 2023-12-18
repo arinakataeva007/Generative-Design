@@ -8,9 +8,11 @@ namespace RevitProject
 
         protected override double MinWidthMeter => 1.65;
 
-        protected override double MinHeightMeter => MinSquareMeter / MinWidthMeter;
+        protected override double MinHeightMeter => 1.65;
 
-        protected override double MinSquareMeter => 4;
+        protected override double MinSquareMeter => MinWidthMeter * MinHeightMeter;
+
+        public override bool canNearWindow => false;
 
         public Bathroom() : base() { }
 
@@ -19,6 +21,21 @@ namespace RevitProject
         public Bathroom(XYZ minPoint, double widthMeter = 0, double heightMeter = 0, double squareMeter = 0) :
             base(minPoint, widthMeter, heightMeter, squareMeter) { }
         
-        public Bathroom(Rectangle rectangle) : base(rectangle) { }
+        public Bathroom(Rectangle2D rectangle) : base(rectangle) { }
+
+        public override Room CreateNew(Rectangle2D newRectangle)
+        {
+            return new Bathroom(newRectangle);
+        }
+
+        public override Room CreateNew(XYZ pointMin, XYZ pointMax)
+        {
+            return new Bathroom(new Rectangle2D(pointMin, pointMax));
+        }
+
+        public override bool IsCorectPositionRelativeWalls(Side2D wallWithDoor, Side2D wallWithWindow)
+        {
+            return true;
+        }
     }
 }
