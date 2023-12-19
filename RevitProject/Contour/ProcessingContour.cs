@@ -16,7 +16,7 @@ namespace RevitProject
             var sideWithDoor = GetSelectedSide(doc, uIApplication, contourShape, "дверью");
             var sideWithWindow = GetSelectedSide(doc, uIApplication, contourShape, "окном");
 
-            return new ContourFlat2D(contourShape, sideWithDoor, sideWithWindow);
+            return new ContourFlat2D(contourShape, sideWithDoor, sideWithWindow, familyInstance.Name);
         }
 
         private static FamilyInstance GetSelectedFamilyInstance(Document doc, UIApplication uIApplication)

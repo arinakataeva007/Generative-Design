@@ -59,13 +59,14 @@
                             CornerRadius="10"
                             Margin="0,50,0,20">
                         <TextBlock Text="ФОРМА"
+                                x:Name="FormText"
                                 TextWrapping="Wrap"
                                 TextAlignment="Center"
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Foreground="White"
                                 FontSize="22" 
-                                   Height="26" Width="149"
+                                Height="26" Width="149"
                                    />
                     </Border>
                     <Button Content="Выбрать форму"

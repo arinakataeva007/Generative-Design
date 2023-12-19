@@ -62,6 +62,8 @@ namespace RevitProject
 
             ConfirmButton.IsEnabled = false;
 
+            FormText.Text = contourRoom.ToString();
+
             Show();
         }
 
