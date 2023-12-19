@@ -7,77 +7,163 @@
         ResizeMode="NoResize"
         Title="Generate" Height="470" Width="800"
         FontFamily="Calibri"
-        Background="Gray">
+        Background="Transparent"
+        AllowsTransparency="True"
+        WindowStyle="None">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Themes/ModernButtonTheme.xaml"/>
+                <ResourceDictionary Source="Themes/ModernLabelTheme.xaml"/>
+                <ResourceDictionary Source="Themes/ModernScroll.xaml"/>
+                <ResourceDictionary Source="Themes/ModernButtonButtonTheme.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <Border
+        Background="#272537"
+        CornerRadius="20"
+        BorderThickness="3"
+        BorderBrush="AliceBlue">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="211*"/>
+                <ColumnDefinition Width="201*"/>
+                <ColumnDefinition Width="382*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="65*"/>
+                <RowDefinition Height="363*"/>
+                <RowDefinition Height="36*"/>
+            </Grid.RowDefinitions>
 
-    <Grid x:Name="MainWin">
-
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="215"/>
-            <ColumnDefinition Width="3"/>
-            <ColumnDefinition Width="180"/>
-            <ColumnDefinition Width="4"/>
-            <ColumnDefinition Width="400"/>
-        </Grid.ColumnDefinitions>
-        <Label Grid.Column="1"
-               Background="Black"/>
-        <Label Grid.Column="3"
-               Background="Black"/>
-
-        <StackPanel Grid.Column="0"
-                    Margin="10,0">
-            <Label Content="Название объекта" 
-                    HorizontalContentAlignment="Center"
-                    Margin="0,50,0,0"
-                    Background="Silver"/>
-
-            <Button Content="Выбрать объект" Width="auto"
-                    Height="25"
-                    Margin="0,0,0,100"
-                    Click="SelectItem"/>
-            <Label Content="Выбор типа квартиры"
-                   Background="Silver"
-                   HorizontalContentAlignment="Center"/>
-            <ComboBox x:Name="FlatBox" Width="auto" Height="25"
-                      SelectionChanged="FlatBox_SelectionChanged"
-                      SelectedValuePath="Name"
-                      Margin="0,0"/>
-        </StackPanel>
-
-        <StackPanel Grid.Column="2">
-            <TextBlock 
-                TextWrapping="Wrap"
-                FontSize="14"
-                Background="Silver"
-                TextAlignment="Center"
-                Width="180"
-                       >Предпросмотр вариантов квартир</TextBlock>
-            <ScrollViewer CanContentScroll="True" Height="400">
+            <TextBlock Text="Выбрать форму и тип"
+                        TextWrapping="Wrap"
+                        TextAlignment="Center"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        FontSize="24" 
+                        Width="170" Height="59"/>
+            <Border CornerRadius="7" 
+                    BorderBrush="Black" 
+                    BorderThickness="1"
+                    Grid.Column="0"
+                    Grid.Row="1">
                 <StackPanel>
-                    <TextBlock TextWrapping="Wrap"
-                            FontSize="14"
-                            Background="White"
-                            TextAlignment="Center">
-                        Предпросмотр вариантов квартир
-                    </TextBlock>
-                </StackPanel>
-            </ScrollViewer>
-        </StackPanel>
+                    <Border Width="auto"
+                            Grid.Row="1"
+                            BorderBrush="Aqua"
+                            BorderThickness="3"
+                            CornerRadius="10"
+                            Margin="0,50,0,20">
+                        <TextBlock Text="ФОРМА"
+                                TextWrapping="Wrap"
+                                TextAlignment="Center"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Foreground="White"
+                                FontSize="22" 
+                                   Height="26" Width="149"
+                                   />
+                    </Border>
+                    <Button Content="Выбрать форму"
+                                 Style="{StaticResource ModernButtonButton}"
+                                 Margin="0,0,0,90" Height="25" Width="161"
+                                 Click="Button_SelectContour"
+                            />
 
-        <StackPanel Grid.Column="5">
-            <TextBlock TextWrapping="Wrap"
-                        FontSize="20"
-                        Background="Silver"
-                        TextAlignment="Center">
-                    Предпросмотр одной квартиры
-            </TextBlock>
-            <Image Source="https://mimigram.ru/wp-content/uploads/2020/07/%D0%A7%D1%82%D0%BE-%D1%82%D0%B0%D0%BA%D0%BE%D0%B5-%D1%84%D0%BE%D1%82%D0%BE.jpeg" Height="201" Width="298"
-                   Margin="0,50"/>
-            <Button Width="100" Height="40"
-                    HorizontalAlignment="Right"
-                    Margin="0,65,10,0"
-                    Click="Confirm">
-                Подтвердить
-            </Button>
-        </StackPanel>
-    </Grid>
+                    <Label Content="Выбор типа квартиры"
+                           HorizontalContentAlignment="Center"
+                           Style="{StaticResource ModernLabel}" 
+                           Grid.Row="1"
+                           Width="auto"
+                           Margin="0,0,0,10" Height="30"/>
+
+                    <StackPanel x:Name="stackPanel"
+                                Grid.Row="1">
+                        <RadioButton x:Name="RadioButton1"
+                                 GroupName="Types" Content="Квартира-студия" 
+                                 Style="{StaticResource ModernButton}"
+                                 Margin="0,0,0,5" Width="116"
+                                 Checked="RadioButton_Studio"/>
+                        <RadioButton x:Name="RadioButton2" 
+                                 GroupName="Types" Content="Однокомнатная"
+                                 Style="{StaticResource ModernButton}"
+                                 Margin="0,0,0,5" Width="116"
+                                 Checked="RadioButton_OneBedroom"/>
+                        <RadioButton x:Name="RadioButton3" 
+                                 GroupName="Types" Content="Двухкомнатная"
+                                 Style="{StaticResource ModernButton}"
+                                 Margin="0,0,0,5" Width="115"
+                                 Checked="RadioButton_TwoBedroom"/>
+                        <RadioButton x:Name="RadioButton4" 
+                                 GroupName="Types" Content="Трёхкомнатная"
+                                 Style="{StaticResource ModernButton}" Width="114"
+                                 Checked="RadioButton_ThreeBedroom"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock Grid.Column="1" 
+                        Text="Варианты квартиры"
+                         TextWrapping="Wrap"
+                         TextAlignment="Center"
+                         HorizontalAlignment="Center"
+                         VerticalAlignment="Center"
+                         Foreground="White"
+                         FontSize="24"
+                         Width="170" Height="59"/>
+            <Border CornerRadius="7" 
+                    BorderBrush="Black" 
+                    BorderThickness="1"
+                    Grid.Column="1"
+                    Grid.Row="1">
+                <StackPanel>
+                    <ScrollViewer CanContentScroll="True" Height="auto"
+                              Grid.Column="1"
+                              Grid.Row="1">
+                        <StackPanel Height="352">
+                            <TextBlock TextWrapping="Wrap"
+                            FontSize="14"
+                            Background="Transparent"
+                            TextAlignment="Center" Height="17"
+                                   Text="Предпросмотр квартир"
+                                   Foreground="White"
+                                   TextDecorations="Underline"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </StackPanel>
+
+            </Border>
+
+            <TextBlock Grid.Column="2" 
+                       Text="Предпросмотр квартиры"
+                        TextWrapping="Wrap"
+                        TextAlignment="Center"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Foreground="White"
+                        FontSize="24"
+                        Width="362" Height="29"/>
+            <Border CornerRadius="7" 
+                    BorderBrush="Black" 
+                    BorderThickness="1"
+                    Grid.Column="2"
+                    Grid.Row="1">
+                <Image Source="https://mimigram.ru/wp-content/uploads/2020/07/%D0%A7%D1%82%D0%BE-%D1%82%D0%B0%D0%BA%D0%BE%D0%B5-%D1%84%D0%BE%D1%82%D0%BE.jpeg" Height="201" Width="298"
+                       Stretch="UniformToFill"
+                       />
+            </Border>
+
+            <Button x:Name="ConfirmButton"
+                         Content="Подтвердить"
+                         Style="{StaticResource ModernButtonButton}"
+                         Grid.Row="2"
+                         Grid.Column="2" Margin="249,4,35,4"
+                         Click="Button_Confirm"
+                         />
+        </Grid>
+    </Border>
 </Window>

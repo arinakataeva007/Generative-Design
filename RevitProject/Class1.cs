@@ -8,71 +8,29 @@ namespace RevitProject
 {
     [Transaction(TransactionMode.Manual)]
     [Regeneration(RegenerationOption.Manual)]
-    public class Class1 : IExternalCommand
+    public class Class1 : IExternalCommand, IExternalEventHandler
     {
-        //readonly MainWindow userWindow1 = new MainWindow();
+        private UserWindow1 UserWindow { get; set; }
 
-        //private static ExternalCommandData commandData1;
-
+        private ExternalEvent externalEvent1;
+        public ExternalEvent ExternalEvent1 { get => externalEvent1; }
+        
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
-            //userWindow1.ShowDialog();
-            //commandData1 = commandData;
+            externalEvent1 = ExternalEvent.Create(this);
 
-            var uiApp = commandData.Application;
-            var doc = uiApp.ActiveUIDocument.Document;
-
-            var contourRoom = ProcessingContour.GetContourRoom(doc, uiApp);
-
-            //TaskDialog.Show("36", $"{contourRoom.GeometricShape}\n{contourRoom.SideWithDoor}\n{contourRoom.SideWithWindow}");
-
-
-            //var transform = familyInstance.GetTotalTransform();
-
-            //    GetBoundingBoxRotatedElement(doc, familyInstance, transform, userClickPoint);
-
-
-            //    //if (transform.BasisX != XYZ.BasisX && transform.BasisY != XYZ.BasisY)
-            //    //    boundingBox = GetBoundingBoxRotatedElement(doc, familyInstance, transform, boundingBox.Min);
-
-
-            var shapes = Generate.GetShapes(contourRoom);
-
-            CreateNewDirectShape(doc, contourRoom.GeometricShape.ExtremePoints[0], contourRoom.GeometricShape.ExtremePoints[2], shapes);
+            UserWindow = new UserWindow1(commandData, this);
+            UserWindow.ShowDialog();
 
             return Result.Succeeded;
         }
 
-        private static BoundingBoxXYZ GetBoundingBoxRotatedElement(Document document, FamilyInstance familyInstance, 
-            Transform transform, XYZ minPosition)
+        public void Execute(UIApplication uiApp)
         {
-            BoundingBoxXYZ boundingBox;
+            CreateNewDirectShape(UserWindow.Document, UserWindow.ContourRoom.GeometricShape.ExtremePoints[0], UserWindow.ContourRoom.GeometricShape.ExtremePoints[2], UserWindow.Shapes);
+        }
 
-            var angleX = transform.BasisX.AngleTo(XYZ.BasisX);
-            //var angleY = transform.BasisY.AngleTo(XYZ.BasisY);
-
-            if (transform.BasisX.DotProduct(XYZ.BasisX) < 0) angleX = -angleX;
-            //if (transform.BasisY.DotProduct(XYZ.BasisY) < 0) angleY = -angleY;
-
-            using (var t = new Transaction(document, "Rotate"))
-            {
-                t.Start();
-
-                ElementTransformUtils.RotateElement(document, familyInstance.Id, 
-                    Line.CreateBound(minPosition, minPosition + XYZ.BasisZ), angleX);
-
-                var geometry = familyInstance.get_Geometry(new Options());
-                boundingBox = geometry.GetBoundingBox();
-
-                //ПОВОРОТ ОБРАТНО
-                ElementTransformUtils.RotateElement(document, familyInstance.Id,
-                    Line.CreateBound(minPosition, minPosition + XYZ.BasisZ), -angleX);
-
-                t.Commit();
-            }
-
-            return boundingBox;
-        } 
+        public string GetName() => "CreateNewDirectShape";
 
         public static void CreateNewDirectShape(Document doc, XYZ pointMin, XYZ pointMax, List<List<Room>> variants)
         {

@@ -52,3 +52,32 @@ D:\chern\Documents\Generative-Design\RevitProject\obj\Debug\RevitProject.pdb
 D:\chern\Documents\Generative-Design\RevitProject\bin\Debug\UserWindow.exe
 D:\chern\Documents\Generative-Design\RevitProject\bin\Debug\UserWindow.pdb
 D:\chern\Documents\Generative-Design\RevitProject\bin\Debug\UserWindow.exe.config
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject.csproj.AssemblyReference.cache
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\UserWindow1.baml
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\UserWindow1.g.cs
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject_MarkupCompile.cache
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject.g.resources
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject.csproj.CoreCompileInputs.cache
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject.dll
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject.pdb
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\NUnit3.TestAdapter.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\NUnit3.TestAdapter.pdb
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\nunit.engine.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\nunit.engine.api.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\nunit.engine.core.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\testcentric.engine.metadata.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitProject.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitProject.pdb
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\Microsoft.VisualStudio.CodeCoverage.Shim.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitAPIUI.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\AdWindows.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitAddInUtility.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitUIAPI.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitMFCAPI.dll
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitAPIUI.xml
+H:\Git Hub\Generative-Design\RevitProject\bin\Debug\RevitAddInUtility.xml
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\Themes\ModernButtonButtonTheme.baml
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\Themes\ModernButtonTheme.baml
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\Themes\ModernLabelTheme.baml
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\Themes\ModernScroll.baml
+H:\Git Hub\Generative-Design\RevitProject\obj\Debug\RevitProject.csproj.CopyComplete

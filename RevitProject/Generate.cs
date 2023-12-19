@@ -10,7 +10,7 @@ namespace RevitProject
         private const double WidthOuterWall = 0.82; // в футах (250мм) 
         private const double WidthInnerWall = 0.49; // в футах (150мм)
 
-        public static List<List<Room>> GetShapes(ContourFlat2D contourFlat)
+        public static List<List<Room>> GetShapes(ContourFlat2D contourFlat, List<Room> rooms)
         {
             //Пока только для прямоугольника, квадрата
 
@@ -19,7 +19,6 @@ namespace RevitProject
             var height = contourRectangle.Width.LengthOnMeter;
             var width = contourRectangle.Height.LengthOnMeter;
             var squareSpace = height * width;
-            var rooms = GetRooms(squareSpace);
             var sortRooms = rooms.OrderByDescending(x => x.SquareMeter).ToList();
 
             return MoveRooms(sortRooms, contourWithoutWalls);
