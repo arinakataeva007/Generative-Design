@@ -27,49 +27,42 @@ namespace RevitProject
 
         public void Execute(UIApplication uiApp)
         {
-            CreateNewDirectShape(UserWindow.Document, UserWindow.ContourRoom.GeometricShape.ExtremePoints[0], UserWindow.ContourRoom.GeometricShape.ExtremePoints[2], UserWindow.Shapes);
+            CreateNewDirectShape(UserWindow.Document, UserWindow.ContourRoom.GeometricShape.ExtremePoints[0], UserWindow.ContourRoom.GeometricShape.ExtremePoints[2], UserWindow.Shapes[UserWindow.ShapeIndex]);
         }
 
         public string GetName() => "CreateNewDirectShape";
 
-        public static void CreateNewDirectShape(Document doc, XYZ pointMin, XYZ pointMax, List<List<Room>> variants)
+        public static void CreateNewDirectShape(Document doc, XYZ pointMin, XYZ pointMax, List<Room> variant)
         {
             using (Transaction trans = new Transaction(doc, "Create Box DirectShape"))
             {
                 trans.Start();
-                //Костыль : нужен для отрисовки квартир друг за другом
-                var minPosition = new XYZ(0, 0, 0);
-
-                foreach (var variant in variants)
+   
+                foreach (var room in variant)
                 {
-                    foreach (var room in variant)
-                    {
-                        var points = room.Rectangle.ExtremePoints.Select(p => p + minPosition).ToArray();
-                        var cL = new CurveLoop();
+                    var points = room.Rectangle.ExtremePoints.Select(p => p).ToArray();
+                    var cL = new CurveLoop();
 
-                        cL.Append(Line.CreateBound(points[0], points[1]));
-                        cL.Append(Line.CreateBound(points[1], points[2]));
-                        cL.Append(Line.CreateBound(points[2], points[3]));
-                        cL.Append(Line.CreateBound(points[3], points[0]));
+                    cL.Append(Line.CreateBound(points[0], points[1]));
+                    cL.Append(Line.CreateBound(points[1], points[2]));
+                    cL.Append(Line.CreateBound(points[2], points[3]));
+                    cL.Append(Line.CreateBound(points[3], points[0]));
 
-                        var curveLoops = new List<CurveLoop>() { cL };
-                        var solidOptions = new SolidOptions(ElementId.InvalidElementId, ElementId.InvalidElementId);
-                        var solid = GeometryCreationUtilities.CreateExtrusionGeometry(curveLoops, XYZ.BasisZ, pointMax.Z - pointMin.Z, 
-                            solidOptions);
+                    var curveLoops = new List<CurveLoop>() { cL };
+                    var solidOptions = new SolidOptions(ElementId.InvalidElementId, ElementId.InvalidElementId);
+                    var solid = GeometryCreationUtilities.CreateExtrusionGeometry(curveLoops, XYZ.BasisZ, pointMax.Z - pointMin.Z, 
+                        solidOptions);
 
-                        var directShape = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_GenericModel));
-                        directShape.Name = room.Name;
-                        directShape.SetShape(new List<GeometryObject>() { solid });
-                        //if (transform.BasisX != XYZ.BasisX)
-                        //{
-                        //    var angleX = transform.BasisX.AngleTo(XYZ.BasisX);
+                    var directShape = DirectShape.CreateElement(doc, new ElementId(BuiltInCategory.OST_GenericModel));
+                    directShape.Name = room.Name;
+                    directShape.SetShape(new List<GeometryObject>() { solid });
+                    //if (transform.BasisX != XYZ.BasisX)
+                    //{
+                    //    var angleX = transform.BasisX.AngleTo(XYZ.BasisX);
 
-                        //    ElementTransformUtils.RotateElement(doc, directShape.Id,
-                        //        Line.CreateBound(points[0], points[0] + XYZ.BasisZ), angleX);
-                        //}
-                    }
-
-                    minPosition += new XYZ(30, 0, 0);
+                    //    ElementTransformUtils.RotateElement(doc, directShape.Id,
+                    //        Line.CreateBound(points[0], points[0] + XYZ.BasisZ), angleX);
+                    //}
                 }
 
                 TaskDialog.Show("DirectShape", $"Completed");

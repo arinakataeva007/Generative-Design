@@ -20,7 +20,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
-    
+
     <Border
         Background="#272537"
         CornerRadius="20"
@@ -125,14 +125,15 @@
                     <ScrollViewer CanContentScroll="True" Height="auto"
                               Grid.Column="1"
                               Grid.Row="1">
-                        <StackPanel Height="352">
+                        <StackPanel x:Name="OptionsField" Height="352">
                             <TextBlock TextWrapping="Wrap"
                             FontSize="14"
                             Background="Transparent"
                             TextAlignment="Center" Height="17"
                                    Text="Предпросмотр квартир"
                                    Foreground="White"
-                                   TextDecorations="Underline"/>
+                                   TextDecorations="Underline"
+                                   Margin="0,0,0,15"/>
                         </StackPanel>
                     </ScrollViewer>
                 </StackPanel>
@@ -148,14 +149,19 @@
                         Foreground="White"
                         FontSize="24"
                         Width="362" Height="29"/>
+
             <Border CornerRadius="7" 
                     BorderBrush="Black" 
                     BorderThickness="1"
                     Grid.Column="2"
                     Grid.Row="1">
-                <Image Source="https://mimigram.ru/wp-content/uploads/2020/07/%D0%A7%D1%82%D0%BE-%D1%82%D0%B0%D0%BA%D0%BE%D0%B5-%D1%84%D0%BE%D1%82%D0%BE.jpeg" Height="201" Width="298"
-                       Stretch="UniformToFill"
-                       />
+
+                <Canvas x:Name="PreviewField"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Height="190" 
+                        Width="314"/>
+
             </Border>
 
             <Button x:Name="ConfirmButton"

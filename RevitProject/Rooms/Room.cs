@@ -1,6 +1,4 @@
 ﻿using Autodesk.Revit.DB;
-using Autodesk.Revit.DB.Mechanical;
-using System.Windows.Media;
 
 namespace RevitProject
 {
