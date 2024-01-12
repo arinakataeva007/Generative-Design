@@ -29,13 +29,13 @@ namespace RevitProject
 
                 if (selectedElement is FamilyInstance familyInstance)
                 {
-                    TaskDialog.Show("Успешный выбор", "Контур успешно выбран");
                     return familyInstance;
                 }
                 else
                     TaskDialog.Show("Ошибка выбора", $"Вам нужно выбрать 'Модель в контексте выдавливания'\nПопробуйте ещё раз");
             }
         }
+
         /// <summary>
         /// Возврат выбранной стены
         /// </summary>
@@ -59,7 +59,6 @@ namespace RevitProject
                         .OrderBy(s => s.DistanceToPoint(userClickPoint)).ToArray();
                     if (side.Length > 0)
                     {
-                        TaskDialog.Show("Успешный выбор", "Стена успешно выбрана");
                         return side[0];
                     }
 

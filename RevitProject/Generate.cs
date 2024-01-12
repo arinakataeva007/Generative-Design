@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Autodesk.Revit.DB;
-using Autodesk.Revit.UI;
 
 namespace RevitProject
 {
@@ -12,8 +11,6 @@ namespace RevitProject
 
         public static List<List<Room>> GetShapes(ContourFlat2D contourFlat, List<Room> rooms)
         {
-            //Пока только для прямоугольника, квадрата
-
             var contourWithoutWalls = GetContourWithoutWalls(contourFlat);
             var contourRectangle = (Rectangle2D)contourWithoutWalls.GeometricShape;
             var height = contourRectangle.Width.LengthOnMeter;
@@ -22,16 +19,6 @@ namespace RevitProject
             var sortRooms = rooms.OrderByDescending(x => x.SquareMeter).ToList();
 
             return MoveRooms(sortRooms, contourWithoutWalls);
-        }
-
-        private static Rectangle2D GetContourRectangleWithoutWalls(XYZ[] extremePointsContur)
-        {
-            extremePointsContur[0] += new XYZ(WidthOuterWall, WidthOuterWall, 0);
-            extremePointsContur[1] += new XYZ(-WidthOuterWall, WidthOuterWall, 0);
-            extremePointsContur[2] += new XYZ(-WidthOuterWall, -WidthOuterWall, 0);
-            extremePointsContur[3] += new XYZ(WidthOuterWall, -WidthOuterWall, 0);
-
-            return new Rectangle2D(extremePointsContur);
         }
 
         private static ContourFlat2D GetContourWithoutWalls(ContourFlat2D contourFlat)
@@ -83,24 +70,6 @@ namespace RevitProject
             return new Side2D(newPointMin, newPointMax);
         }
 
-        private static List<Room> GetRooms(double square)
-        {
-            var rooms = new List<Room> { new Kitchen(), new Hallway(), new Bathroom() };
-
-            if (square < 28) // студия
-                return rooms;
-            else if (square < 44) // однокомнатная
-                rooms.Add(new LivingRoom());
-            else if (square < 56) // двушка
-                rooms.AddRange(new List<Room> { new LivingRoom(), new LivingRoom() });
-            else if (square < 70) // трёшка
-                rooms.AddRange(new List<Room> { new LivingRoom(), new LivingRoom(), new LivingRoom() });
-            else
-                return new List<Room> { };
-
-            return rooms;
-        }
-
         private static List<List<Room>> MoveRooms(List<Room> rooms, ContourFlat2D contourFlat)
         {
             var contourRectangle = (Rectangle2D)contourFlat.GeometricShape;
@@ -119,13 +88,7 @@ namespace RevitProject
                     result.Add(variants[i]);
             }
 
-            TaskDialog.Show("Check Variants", $"{result.Count}");
-
             return result;
-
-            //TaskDialog.Show("Check Variants", $"{variants.Count}");
-
-            //return variants;
         }
 
         private static bool CheckCompilance(List<List<Room>> flatVariants, List<Room> rooms, ContourFlat2D contourFlat)
@@ -208,20 +171,6 @@ namespace RevitProject
             for (var i = 0; i < rooms.Count; i++)
             {
                 result.AddRange(GetPossiblePositionsRoom(rooms[i].Rectangle, room));
-                //var extremePoints = rooms[i].Rectangle.ExtremePoints;
-
-                //foreach (var point in extremePoints)
-                //{
-                //    for (var x = -WidthInnerWall; x <= WidthInnerWall; x += WidthInnerWall)
-                //    {
-                //        for (var y = -WidthInnerWall; y <= WidthInnerWall; y += WidthInnerWall)
-                //        {
-                //            var newPoint = point + new XYZ(x, y, 0);
-
-
-                //        }
-                //    }
-                //}
             }
 
             return result;
@@ -244,7 +193,7 @@ namespace RevitProject
             };
             
         }
-
+        
         private static List<XYZ> GetPossiblePositionsRoom(Rectangle2D rectangleInContur, Room room)
         {
             var result = new HashSet<XYZ>();
@@ -445,7 +394,6 @@ namespace RevitProject
                 return rectangle1.MaxXmaxY.X >= rectangle2.MinXminY.X;
         }
 
-        //Подумать про передачу сторон
         private static Room ResizeRoom(Room room, List<Room> rooms, Rectangle2D contourRectangle, XYZ pointMin, XYZ pointMax)
         {
             var newVisiting = room.CreateNew(new Rectangle2D(pointMin, pointMax));
@@ -495,111 +443,3 @@ namespace RevitProject
         }
     }
 }
-
-
-
-
-
-
-
-
-//Один из способов нескольких вариантов, не работает
-
-//private static List<List<Room>> GetVariants(Room room, List<List<Room>> movingRooms, Rectangle spaceRectangle)
-//{
-//    var result = new List<List<Room>>();
-
-//    for (var i = 0; i < movingRooms.Count; i++)
-//    {
-//        var newPositions = GetNewPositions(movingRooms[i], spaceRectangle);
-
-//        foreach (var position in newPositions)
-//        {
-//            var newRoom = Room.CreateNewRoom(room, position, room.WidthMeter, room.HeightMeter, 0);
-
-//            if (spaceRectangle.ContainsRectangle(newRoom.Rectangle))
-//                newRoom = ProcessingIntersections(newRoom, newRoom.Rectangle, movingRooms[i], spaceRectangle);
-//            else
-//            {
-//                var intersectRectangle = spaceRectangle.GetIntersectionRectangle(newRoom.Rectangle);
-//                if (intersectRectangle.SquareMeter < room.SquareMeter)
-//                    continue;
-
-//                newRoom = Room.CreateNewRoom(newRoom, intersectRectangle);
-
-//                newRoom = ProcessingIntersections(newRoom, newRoom.Rectangle, movingRooms[i], spaceRectangle);
-//            }
-//            if (newRoom != null)
-//            {
-//                var newVariant = new List<Room>();
-//                newVariant.AddRange(movingRooms[i].ToArray());
-//                newVariant.Add(newRoom);
-
-//                result.Add(newVariant);
-//            }
-//        }
-//    }
-
-//    return result;
-//}
-
-//private static List<XYZ> GetNewPositions(List<Room> rooms, Rectangle spaceRectangle)
-//{
-//    var result = new List<XYZ>();
-
-//    for (var i = 0; i < rooms.Count; i++)
-//    {
-//        var extremePoints = rooms[i].GetExtremePoints();
-
-//        foreach (var point in extremePoints)
-//        {
-//            for (var x = -1; x <= 1; x++)
-//            {
-//                for (var y = -1; y <= 1; y++)
-//                {
-//                    var newPoint = point + new XYZ(x, y, 0);
-//                    if (spaceRectangle.ContainsPoint(newPoint) && !rooms.Any(r => r.Rectangle.ContainsPoint(newPoint)))
-//                        result.Add(newPoint);
-//                }
-//            }
-//        }
-//    }
-
-//    return result;
-//}
-
-// Окончание первого способа
-
-
-
-// По одному варианту
-//var spaceMinX = extremePointsSpace[0].X;
-//var spaceMinY = extremePointsSpace[0].Y;
-//var pointZ = extremePointsSpace[0].Z;
-//var maxX = extremePointsSpace[2].X;
-//var maxY = extremePointsSpace[2].Y;
-//var movingRooms = new List<Room>();
-//var countRooms = rooms.Count;
-//var variantsMoving = new List<List<Room>>();
-
-//for (var i = 0; i < countRooms; i++)
-//{
-//    if (spaceMinX + rooms[i].WidthFeet <= maxX && spaceMinY + rooms[i].HeightFeet <= maxY)
-//    {
-//        if (movingRooms.Count == 0)
-//        {
-//            var newRoom = Room.CreateNewRoom(rooms[i], new XYZ(spaceMinX, spaceMinY, pointZ),
-//                rooms[i].WidthMeter, rooms[i].HeightMeter, rooms[i].SquareMeter);
-//            movingRooms.Add(newRoom);
-//            variantsMoving.Add(new List<Room> { newRoom });
-//        }
-//        else
-//        {
-//            //var newRoom = GetNewRooms(rooms[i], movingRooms, spaceRectangle);
-//            variantsMoving = GetVariants(rooms[i], variantsMoving, spaceRectangle);
-//            //TaskDialog.Show("70 Generate", $"{variantsMoving[0].Count}");
-//            //if (newRoom != null)
-//            //    movingRooms.Add(newRoom);
-//        }
-//    }
-//}

@@ -24,9 +24,6 @@ namespace RevitProject
 
         public bool Contains(XYZ point)
         {
-            //return (point.X - pointMin.X) * (pointMax.X - pointMin.X) == (point.Y - pointMin.Y) * (pointMax.Y - pointMin.Y) ||
-            //    (point.X - pointMax.X) * (pointMin.X - pointMax.X) == (point.Y - pointMax.Y) * (pointMin.Y - pointMax.Y);
-
             return Math.Min(pointMin.X, pointMax.X) <= point.X && point.X <= Math.Max(pointMin.X, pointMax.X) &&
                 Math.Min(pointMin.Y, pointMax.Y) <= point.Y && point.Y <= Math.Max(pointMin.Y, pointMax.Y);
         }

@@ -1,7 +1,4 @@
-﻿using Autodesk.Revit.DB;
-using System.Linq;
-
-namespace RevitProject
+﻿namespace RevitProject
 {
     public class ContourFlat2D
     {
@@ -19,32 +16,5 @@ namespace RevitProject
         }
 
         public override string ToString() => Name;
-
-        //public void SubstractWidthOuterWalls(double widthOuterWall)
-        //{
-        //    var minX = GeometricShape.ExtremePoints.Min(p => p.X);
-        //    var minY = GeometricShape.ExtremePoints.Min(p => p.Y);
-        //    var maxX = GeometricShape.ExtremePoints.Max(p => p.X);
-        //    var maxY = GeometricShape.ExtremePoints.Max(p => p.Y);
-        //    var points = GeometricShape.ExtremePoints;
-
-        //    for (var i = 0; i < points.Length; i++)
-        //    {
-        //        for (var x = -widthOuterWall; x <= widthOuterWall; x++)
-        //        {
-        //            for (var y = -widthOuterWall; y <= widthOuterWall; y++)
-        //            {
-        //                if (x == 0 || y == 0) continue;
-
-        //                if (GeometricShape.Contains(points[i] + new XYZ(x, y, 0)) &&
-        //                    (points[i].X == minX || points[i].X == maxX || points[i].Y == minY || points[i].Y == maxY))
-        //                    points[i] += new XYZ(x, y, 0);
-        //                if (!GeometricShape.Contains(points[i] + new XYZ(x, y, 0)) && points[i].X != minX && points[i].X != maxX
-        //                    && points[i].Y != minY && points[i].Y != maxY)
-        //                    points[i] -= new XYZ(x, y, 0);
-        //            }
-        //        }
-        //    }
-        //}
     }
 }

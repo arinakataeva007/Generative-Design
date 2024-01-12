@@ -1,6 +1,5 @@
 ﻿using Autodesk.Revit.DB;
 using System;
-using System.Linq;
 
 namespace RevitProject
 {
@@ -115,46 +114,6 @@ namespace RevitProject
 
             return null;
         }
-
-        //public double GetMinDistanceSideToPoint(XYZ point)
-        //{
-        //    if (ContainsPoint(point)) return 0;
-
-        //    var sides = new (XYZ, XYZ)[4]
-        //    {
-        //        (MinXminY, MaxXminY),
-        //        (MaxXminY, MaxXmaxY),
-        //        (MinXmaxY, MaxXmaxY),
-        //        (MinXminY, MinXmaxY)
-        //    };
-
-        //    if (MinXminY.X <= point.X && point.X <= MaxXmaxY.X)
-        //        return Math.Min(Math.Abs(point.Y - MinXminY.Y), Math.Abs(point.Y - MaxXmaxY.Y));
-        //    else if (MinXminY.Y <= point.Y && point.Y <= MaxXmaxY.Y)
-        //        return Math.Min(Math.Abs(point.X - MinXminY.X), Math.Abs(point.X - MaxXmaxY.X));
-        //    else
-        //    {
-        //        var minDistanceX = Math.Min(Math.Abs(point.X - MinXminY.X), Math.Abs(point.X - MaxXmaxY.X));
-        //        var minDistanceY = Math.Min(Math.Abs(point.Y - MinXminY.Y), Math.Abs(point.Y - MaxXmaxY.Y));
-        //        return Math.Min(minDistanceX, minDistanceY);
-        //    }
-
-        //    //foreach (var side in sides)
-        //    //{
-        //    //    var value = ((point.X - side.Item1.X) * (side.Item2.X - side.Item1.X) + 
-        //    //        (point.Y - side.Item1.Y) * (side.Item2.Y - side.Item1.Y)) / 
-        //    //        (Math.Pow(side.Item2.X - side.Item1.Y, 2) + Math.Pow(side.Item2.Y - side.Item1.Y, 2));
-        //    //    if (value < 0)
-        //    //        value = 0;
-        //    //    if (value > 1)
-        //    //        value = 1;
-        //    //    var distance = Math.Sqrt(Math.Pow(side.Item1.X - point.X + (side.Item2.X - side.Item1.X) * value, 2) + 
-        //    //        Math.Pow(side.Item1.Y - point.Y + (side.Item2.Y - side.Item1.Y) * value, 2));
-        //    //    minDistance = Math.Min(minDistance, distance);
-        //    //}
-
-        //    //return minDistance;
-        //}
 
         public override string ToString()
         {

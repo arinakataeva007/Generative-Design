@@ -35,6 +35,10 @@ namespace RevitProject
 
         public override bool IsCorectPositionRelativeWalls(Side2D wallWithDoor, Side2D wallWithWindow)
         {
+            foreach (var point in rectangle.ExtremePoints)
+                if (wallWithWindow.Contains(point))
+                    return false;
+
             return true;
         }
     }
